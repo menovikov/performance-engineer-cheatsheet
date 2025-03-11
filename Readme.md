@@ -5,7 +5,7 @@
 ### Table of contents:
 1. [CPU](cpu.md)
 2. [Memory](memory.md)
-3. [File system](filesystem.md)
+3. [File system](file system.md)
 4. [Network](network.md)
 
 
