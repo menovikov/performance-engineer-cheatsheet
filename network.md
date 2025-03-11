@@ -2,12 +2,16 @@
 
 ### 1. Pick correct cables and connectors
 - Depending on the distance in your expected network, you should choose different cables:
-  - For short distances (up to 100 meters) use twisted pair cables, usually copper shows best results. 
-  Put it simple - converting data to light takes more time than converting it to electricity,
-  and it makes difference when you need to achieve minimum latency and count each microsecond.
+  - For short distances (up to 100 meters) use twisted pair cables, usually copper shows best results. Put it simple - converting data to light takes more time than converting it to electricity, and it makes difference when you need to achieve minimum latency and count each microsecond.
   - For longer distances (up to 1000 meters and more) use fiber optic cables.
 - Avoid using too many routers and switches, as each of them adds latency to the network.
 - Avoid using any wireless connections, as they are less reliable and have higher latency.
+- Sending data over network may involve up to 7 layers of OSI model, and reducing number of layers or using more efficient protocols may reduce latency.
+- Each layer of OSI model has its own overhead and may be optimized:
+  - HTTP/HTTPS: depending on specifics, app may use JSON, XML, Binary data. Also, app may be establishing new sessions for each request. All this may be optimized.
+  - TCP/UDP: selection of those two may have differences in latency. TCP is more reliable, but it has more overhead. UDP is less reliable, but it has less overhead. Also, TCP has congestion control, which may be disabled if you are sure that your network is reliable. There is a QUIC protocol, which is an alternative to TCP and has faster connection establishment, but it is not widely supported yet and takes up more network resources.
+  - IP: IPv4 has less overhead than IPv6, so if you are sure that you don't need IPv6, you may disable it.
+  - Ethernet: Ethernet has different encryptions, such as 8b/10b, 64b/66b, 128b/130b. It means that for each 8 bits of data 2 bits are added as metadata, meaning that 20% of all traffic is metadata. 64b/66b has only 3% of metadata in traffic, 128b/130b - 1.5%.
 
 ### 2. Structure you network correctly
 - When limiting network access, try to block traffic at the edge of the network, not at the core. This will reduce the number of packets that need to be processed by the core network devices.
@@ -18,7 +22,7 @@
   Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name
   tcp        0      0```
 - When possible, avoid firewalls
-- When possible, do not use TCP/IP stack at all, e.g. Unix sockets are faster than TCP/IP sockets because of the lack of TCP/IP incapsulation overhead.
+- When possible, do not use TCP/IP stack at all, e.g. Unix sockets are faster than TCP/IP sockets because of the lack of TCP/IP encapsulation overhead.
 
 ### 3. Make sure that CPU is in the most efficient state
 - Linux allows you to configure network modes such as RSS (Receive Side Scaling), RPS (Receive Packet Steering), RFS (Receive Flow Steering), and XPS (Transmit Packet Steering). These modes optimize how packets are processed across CPU cores to improve performance in multicore systems. This method is useful when single CPU becomes a bottleneck in receiving packets. Here's how you can configure these modes:
@@ -26,8 +30,17 @@
   - RPS (Receive Packet Steering - software-based alternative to RSS that distributes packet processing across CPU cores): `echo <cpu_mask> > /sys/class/net/eth0/queues/rx-0/rps_cpus`
   - RFS (Receive Flow Steering - directs packets to the CPU where the corresponding application thread is running): `echo <number_of_flows> > /proc/sys/net/core/rps_sock_flow_entries`
   - XPS (Transmit Packet Steering - controls which CPU core is used for transmitting packets): `echo <cpu_mask> > /sys/class/net/<interface>/queues/tx-<queue_id>/xps_cpus`
-- For hardcore development packets may avoid kernel by using Data Plane Development Kit (DPDK)
-- For simple optimization rx and tx may be simply set on separate cores. To do this use
+- For hardcore development: packets may avoid kernel by using Data Plane Development Kit (DPDK)
+- For simple optimization rx and tx may be simply set on separate cores. There is no specific process or thread to move, the setup should be done via IRQs (interrupt requests). They are located at `/proc/interruptions` and can be moved to specific cores via `echo <core_id> > /proc/irq/<irq_number>/smp_affinity`. Also, this may be achieved as restricting of sending interrupts to specific cores using `irqbalance` utility:
+  ```shell
+  # /etc/default/irqbalance
+  
+  # restrict IRQs to CPU 0
+  IRQBALANCE_BANNED_CPUS="00000001"
+  
+  # limit IRQs to CPUs 0 and 1
+  IRQBALANCE_BANNED_CPUS="00000011"
+  ```
 
 ### 4. Detect network problems
 - Hidden problems may be seen with netstat:

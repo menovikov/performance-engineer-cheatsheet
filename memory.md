@@ -1,13 +1,17 @@
 ## Memory performance cheat sheet
 
 ### 1. Know how computer memory works
-When talking about memory, sometimes only RAM is considered. However, memory should be understood as a virtual storage space that includes RAM and other cold storages. When OS or a program runs out of RAM, it starts using different storages like SSD, HDD or other appliances if configured. This is called swapping. Swapping is a slow process because SSD and HDD are slower than RAM. Swapping should be avoided whenever possible if maximum memory speed is needed.
+When talking about memory, sometimes only RAM is considered. However, memory should be understood as a virtual storage space that includes RAM and other cold storages. When OS or a program runs out of RAM, it starts using different storages like SSD, HDD or other appliances if configured. This is called swapping. Swapping is a slow process because SSD and HDD are slower than RAM. Swapping should be avoided whenever possible if maximum memory speed is needed. Translation of physical to virtual address space is done using MMU (Memory Management Unit).
+
+Single unit of memory - a page - is usually 4KB or 8KB (similar to databases). When you see "1GB" of RAM is free, it means that somewhere list of free pages is kept, and its combined size is 1gb, resulting in ~130k+ pages available.
+
+Very important concept in memory - mapping. To map something to memory means to have this object split into address cells and to allow its access via virtual memory address space. So if a file or a device is mapped to memory, access to its contents can be done same way as to RAM without need to scan and search anything.
 
 To turn off swapping, use:
 ```shell
   $ swapoff -a
 ```
-In case you need to experiment with swapping and it's not configured by default, you can create a swap file, e.g. for 2GB:
+In case you need to experiment with swapping, and it's not configured by default, you can create a swap file, e.g. for 2GB:
 ```shell
 $ fallocate -l 2G /swapfile
 $ chmod 600 /swapfile
@@ -18,7 +22,7 @@ Check it with `swapon --show` or `htop`.
 
 ### 2. Choose the right memory type
 - Higher DDR version means higher memory speed.
-- It matters where memory stick is physically located. Most modern programs require high concurrency, so NUMA over UMA is usually preferred. NUMA allows each CPU to have its own memory, which is faster than having single memory bus for all CPUs.
+- It matters where memory stick is physically located. Most modern programs require high concurrency, so NUMA over UMA is usually preferred. NUMA allows each CPU (or group of CPUs) to have its own memory, which is faster than having single memory bus for all CPUs.
 - Memory channels are important. More channels mean more memory bandwidth. For example, Intel Core I7 supports up to 4 channels, which quadruples memory bandwidth compared to single-channel memory.
 
 To find out physical characteristics of memory plugged into motherboard, use:
@@ -72,6 +76,9 @@ To find out physical characteristics of memory plugged into motherboard, use:
         Cache Size: None
         Logical Size: None
 ```
+where DMI type 16 shows physical memory array and DMI type 17 shows memory device. Type 16 includes type 17. For type 16 `Number Of Devices: 8` means that total of 8 RAM sticks are supported up to 2TB total. Type 17 shows characteristics of actually used memory stick, which in presented case may be extended.
+MT/s means mega-transfers per second, which is a measure of memory speed. It may be converted to MHz by dividing by 2, e.g. 4800 MT/s = 2400 MHz. It means that for each clock cycle data can be transferred twice. Configured memory speed may be higher because of such technology as XMP (Extreme Memory Profile). Lower configured memory speed may be a reason to check BIOS settings and enable XMP.
+To calculate how much data actually memory can process you need to multiply memory speed by data width, e.g. 4800 MT/s * 64 bits = 35.76 GB/s.
 
 
 ### 3. Optimize memory usage
@@ -94,7 +101,7 @@ To find out physical characteristics of memory plugged into motherboard, use:
   $ export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
 ```
 When picking memory allocator, start by comparing default one with tcmalloc and jemalloc, as they are the most popular ones. Try running them on real-life scenarios, because each particular app may have different memory usage patterns.
-- Use NUMA nodes. If an app can be allocated to a single NUMA node, it will be faster than if it is allocated to multiple nodes. Also that means using core affinity. To check NUMA nodes:
+- Use NUMA nodes. If an app can be allocated to a single NUMA node, it will be faster than if it is allocated to multiple nodes. Also, that means using core affinity. To check NUMA nodes:
 ```shell
   $ numactl --hardware
   available: 2 nodes (0-1)
@@ -129,4 +136,3 @@ or to move already running process use
 - 4.3 If swapping is enabled and deeper memory analysis is needed, use `perf record` for profiling and `perf report` for analyzing. Some examples are:
   - `perf record -e page-faults -c 1 -p 1843 -g -- sleep 60` - to find all page faults for process 1843 - situations when accessed memory is not in RAM and is being uploaded from disk.
   - `perf mem record command` - track all attempts to access memory from a particular command.
-
