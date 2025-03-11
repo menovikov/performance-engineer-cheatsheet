@@ -2,6 +2,13 @@
 
 ![img.png](img.png)
 
+### Table of contents:
+1. [CPU](cpu.md)
+2. [Memory](memory.md)
+3. [File system](filesystem.md)
+4. [Network](network.md)
+
+
 ### Optimisation assumptions:
 - Target metrics to optimise: latency, throughput, resource utilisation.
 - Applicability: best optimisations may be performed on linux distributions running on bare metal. Clouds may be optimized too, but not that much.
