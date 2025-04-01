@@ -11,8 +11,8 @@ Step 0 in CPU tuning is knowing basics of how CPUs work. Here are some key point
 - Developers may optimize code to be executed faster if they know what CPU is capable of. Example - SIMD instructions, which allow to process multiple data in parallel.
 - Operating System (OS) has a queue for each core, where it places threads to be executed. Ideally threads should not be moved between cores, as it leads to cache misses.
 -  CPU has 2 kinds of activities in terms of its origin:
-  - User mode - when CPU executes user code, e.g. your app.
-  - Kernel mode - when CPU executes OS code, e.g. system calls, interruptions, network, file system, etc.
+    - User mode - when CPU executes user code, e.g. your app.
+    - Kernel mode - when CPU executes OS code, e.g. system calls, interruptions, network, file system, etc.
 - CPU has interruptions - signals which stop current thread execution and switch to another thread:
   - hardware-level: when hardware sends a signal to CPU, e.g. network card has received a packet.
   - software-level: when OS sends a signal to CPU, e.g. timer has expired.
@@ -25,7 +25,7 @@ When tuning an application, which should have really low latencies, consider rev
 - Is it a high-end hardware piece? What year was it manufactured?
 - How many physical cores are there? Cloud providers usually provide vCores, which are not real cores, but are hardware threads. In case the lowest latency is required, developers would need to place each thread on separate physical core, therefore number of cores should be as high as a number of expected OS threads within an application + leave some cores for other OS components, such as network (2 cores - rx/tx), file system, etc.
 - Is it a server or a consumer hardware? (e.g. Intel Xeon, AMD EPYC - are server side lines of products). Does it have enough performance cores (P-cores)? Usually ARM architectures are optimised for energy efficient cores (E-cores), that's why they consume less power.
-- Does the processor support multithreading? It is useful to turn on when more parallelism is needed (e.g. hundreds of OS threads are running simultaneously), but should be turned off when each physical core is expected to produce the lowest latency for only few processes.
+- Does the processor support hyper-threading? It is useful to turn on when more parallelism is needed (e.g. hundreds of OS threads are running simultaneously), but should be turned off when each physical core is expected to produce the lowest latency for only few processes.
 - Does processor have big L-caches? L-caches are used to increase core performance, storing there data and avoiding unnecessary memory access.
 - Does the whole system has good cooling? The thing is - overheating can lead to literal clock speed reduction (or throttling), specific error codes are produced when this happens.
 - Which bus configuration does the processor have? Ideally all modern processors should have interconnections between each core (vs older models, where single central bus is used).

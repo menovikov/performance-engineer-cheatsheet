@@ -34,4 +34,9 @@
 - Many aspects are only mentioned, but not explained in detail. The cheat sheet is a starting point for further research. I'm not giving complete instructions to run on production, just basic key points.
 
 
+### What can I read to dive deeper into every topic?
+- Systems Performance: Enterprise and the Cloud by Brendan Gregg.
+- Performance Analysis and Tuning on Modern CPUs: Squeeze the Last Bit of Performance from Your Application by Denis Bakhvalov.
+
+
 Notes are taken from the book "Systems Performance" by Gregg Brendan and from my own experience. The book is a must-read for performance engineers.
